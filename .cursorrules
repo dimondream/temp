@@ -105,6 +105,11 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - Include info useful for debugging in the program output.
 - Read the file before you try to edit it.
 - Due to Cursor's limit, when you use `git` and `gh` and need to submit a multiline commit message, first write the message in a file, and then use `git commit -F <filename>` or similar command to commit. And then remove the file. Include "[Cursor] " in the commit message and PR title.
+- Project structure: Main code goes in interpreter/src/, scripts in interpreter/, configuration in root directory. Avoid creating duplicate files by following these conventions:
+  - Python modules: interpreter/src/
+  - Scripts: interpreter/ (\*.bat for Windows)
+  - Documentation: interpreter/README.md for users, inline docstrings for code
+  - Generated files (don't edit manually): interpreter/audio_interpreter.egg-info/, venv/, **pycache**/
 
 ## Cursor learned
 
