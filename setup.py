@@ -23,5 +23,5 @@ setup(
     author_email="example@example.com",
     description="A tool that captures system audio and transcribes it using OpenAI's Whisper API",
     keywords="speech, audio, transcription, whisper, openai",
-    python_requires=">=3.8",
+    python_requires=">=3.8.0",
 ) 

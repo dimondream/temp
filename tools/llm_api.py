@@ -106,9 +106,9 @@ def create_llm_client(provider="openai"):
             api_key=api_key
         )
     elif provider == "gemini":
-        api_key = os.getenv('GOOGLE_API_KEY')
+        api_key = os.getenv('GEMINI_API_KEY')
         if not api_key:
-            raise ValueError("GOOGLE_API_KEY not found in environment variables")
+            raise ValueError("GEMINI_API_KEY not found in environment variables")
         genai.configure(api_key=api_key)
         return genai
     elif provider == "local":
@@ -150,7 +150,7 @@ def query_llm(prompt: str, client=None, model=None, provider="openai", image_pat
             elif provider == "anthropic":
                 model = "claude-3-7-sonnet-20250219"
             elif provider == "gemini":
-                model = "gemini-2.0-flash-exp"
+                model = "gemini-2.0-flash"
             elif provider == "local":
                 model = "Qwen/Qwen2.5-32B-Instruct-AWQ"
         
@@ -218,21 +218,15 @@ def query_llm(prompt: str, client=None, model=None, provider="openai", image_pat
         elif provider == "gemini":
             model = client.GenerativeModel(model)
             if image_path:
-                file = genai.upload_file(image_path, mime_type="image/png")
-                chat_session = model.start_chat(
-                    history=[{
-                        "role": "user",
-                        "parts": [file, prompt]
-                    }]
-                )
+                with open(image_path, 'rb') as f:
+                    image_data = f.read()
+                image = {
+                    "mime_type": "image/png",
+                    "data": image_data
+                }
+                response = model.generate_content([prompt, image])
             else:
-                chat_session = model.start_chat(
-                    history=[{
-                        "role": "user",
-                        "parts": [prompt]
-                    }]
-                )
-            response = chat_session.send_message(prompt)
+                response = model.generate_content(prompt)
             return response.text
             
     except Exception as e:
@@ -257,7 +251,7 @@ def main():
         elif args.provider == 'anthropic':
             args.model = "claude-3-7-sonnet-20250219"
         elif args.provider == 'gemini':
-            args.model = "gemini-2.0-flash-exp"
+            args.model = "gemini-2.0-flash"
         elif args.provider == 'azure':
             args.model = os.getenv('AZURE_OPENAI_MODEL_DEPLOYMENT', 'gpt-4o-ms')  # Get from env with fallback
 

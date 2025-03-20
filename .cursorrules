@@ -110,6 +110,7 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
   - Scripts: interpreter/ (\*.bat for Windows)
   - Documentation: interpreter/README.md for users, inline docstrings for code
   - Generated files (don't edit manually): interpreter/audio_interpreter.egg-info/, venv/, **pycache**/
+- On Windows, use `.\venv\Scripts\python.exe` instead of `venv/bin/python` to execute Python scripts from the virtual environment
 
 ## Cursor learned
 
@@ -120,8 +121,187 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 - When searching for recent news, use the current year (2025) instead of previous years, or simply use the "recent" keyword to get the latest information
 - Use PyAudioWPatch instead of standard PyAudio for Windows to capture system audio output with WASAPI loopback support
 - The Whisper API model name to use is "whisper-1" in the OpenAI Python client
+- Whisper API key points:
+  - Supports various audio formats (mp3, mp4, mpeg, mpga, m4a, wav, webm)
+  - Maximum file size: 25MB
+  - Response time varies with audio length
+  - Can handle audio in any language
+  - Supports translation to English
+  - Best for audio under 30 seconds
+  - For longer audio, split into chunks and process sequentially
+- Audio processing with pydub:
+  - Can manipulate audio segments (slice, append, fade, etc.)
+  - Supports various audio formats through ffmpeg
+  - Can export audio with specific bitrates and parameters
+  - Useful for audio preprocessing before sending to Whisper
+  - Provides better audio chunking capabilities than raw WAV handling
+  - Requires ffmpeg for full functionality
+  - Should be used for audio splitting and processing, not bypassed with simpler solutions
+- FFmpeg installation requirements:
+  - Download from https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip
+  - Extract to C:\ffmpeg
+  - Add C:\ffmpeg\bin to system PATH
+  - Verify installation with `ffmpeg -version`
+  - Required for pydub's audio processing capabilities
 
 # Scratchpad
+
+## Current Task: Implement WhisperS2T for Improved Speech Transcription
+
+### Key Points About WhisperS2T:
+
+1. WhisperS2T is an optimized speech-to-text pipeline for the Whisper model with multiple backend options.
+2. Features:
+
+   - Multi-backend support (OpenAI Model, HuggingFace with FlashAttention2, CTranslate2, TensorRT-LLM)
+   - Easy integration of custom VAD models
+   - Efficient handling of both small and large audio files
+   - Streamlined processing with background audio loading
+   - Batching support with multiple language/task decoding
+   - Reduced hallucination through optimized parameters
+   - Dynamic time length support (experimental, CTranslate2 backend only)
+
+3. Requirements:
+   - Audio processing: ffmpeg and libsndfile1 (Windows: FFmpeg already installed)
+   - Installation: `pip install -U whisper-s2t` or from GitHub
+   - Backend-specific dependencies like TensorRT-LLM (optional)
+
+### Implementation Plan:
+
+[X] Step 1: Install FFmpeg (already completed)
+[ ] Step 2: Install WhisperS2T in our environment
+[ ] Step 3: Update Transcription Service with WhisperS2T
+[ ] Step 4: Optimize audio processing with WhisperS2T's features
+[ ] Step 5: Test the implementation
+
+### Detailed Steps:
+
+1. Installing WhisperS2T:
+
+   - Install the package: `pip install -U whisper-s2t`
+   - For better performance, use CTranslate2 backend
+
+2. Integration:
+
+   - Update transcription service to use WhisperS2T instead of OpenAI Whisper
+   - Leverage WhisperS2T's VAD and batching capabilities
+   - Configure for optimal performance on the system
+
+3. Testing:
+   - Compare performance with current implementation
+   - Verify quality of transcription
+   - Measure improvements in speed and resource usage
+
+### Current Status:
+
+- FFmpeg installed and confirmed working
+- Beginning implementation of WhisperS2T
+- Need to update transcription service code
+
+## Previous Task: Fix Real-time Transcription Issues
+
+### Key Points from Documentation:
+
+1. Whisper API:
+
+   - Best for audio under 30 seconds
+   - Longer audio should be split into chunks
+   - Response time varies with audio length
+   - Supports various audio formats
+
+2. Audio Processing:
+   - Need to process chunks in real-time
+   - Should use pydub for audio manipulation and chunking
+   - Need to handle audio format conversion efficiently
+
+### Implementation Plan:
+
+[X] Step 1: Review Current Implementation
+[X] Step 2: Modify Audio Recording
+[X] Step 3: Update Transcription Service
+[ ] Step 4: Improve UI Feedback
+
+### Detailed Steps:
+
+1. Audio Recording:
+
+   - Reduce chunk duration to 10 seconds for faster processing
+   - Process chunks immediately after recording
+   - Use pydub for audio format handling and chunking
+
+2. Transcription Service:
+
+   - Process chunks as they arrive
+   - Add proper error handling
+   - Implement retry mechanism for failed transcriptions
+
+3. UI Updates:
+   - Show processing status for each chunk
+   - Display transcription progress
+   - Add error feedback
+
+### Current Status:
+
+- Documentation reviewed
+- Implementation plan created
+- Ready to proceed with code changes
+
+## Current Task: Fix PyAudioWPatch WASAPI Loopback Implementation
+
+### Key Points from Documentation:
+
+1. PyAudioWPatch is a fork of PyAudio that adds WASAPI loopback support
+2. Key differences from standard PyAudio:
+
+   - Added WASAPI loopback device support
+   - New methods for device management
+   - Context manager support
+   - Fixed name encoding issues
+
+3. Important Implementation Details:
+
+   - Must use `import pyaudiowpatch as pyaudio`
+   - WASAPI loopback devices are duplicated as virtual devices
+   - All loopback devices are input devices
+   - Need to use the loopback analogue of the output device
+
+4. New Methods Available:
+   - `get_default_wasapi_loopback()` - Get loopback for default speakers
+   - `get_wasapi_loopback_analogue_by_index()` - Get loopback for device by index
+   - `get_wasapi_loopback_analogue_by_dict()` - Get loopback for device from info dict
+   - `get_default_wasapi_device()` - Get default WASAPI device
+
+### Implementation Plan:
+
+[X] Step 1: Environment Setup
+[ ] Step 2: Update Code Implementation
+[ ] Step 3: Test and Verify
+
+### Detailed Steps:
+
+1. Environment Setup:
+
+   - Uninstall standard PyAudio
+   - Install PyAudioWPatch
+   - Verify installation
+
+2. Code Implementation:
+
+   - Update imports to use PyAudioWPatch
+   - Use proper WASAPI loopback device selection
+   - Implement proper stream configuration
+   - Add error handling
+
+3. Testing:
+   - Test with default speakers
+   - Test with different audio devices
+   - Verify audio capture quality
+
+### Current Status:
+
+- Documentation reviewed
+- Implementation plan created
+- Ready to proceed with environment setup
 
 ## Current Task: Create an Interpreter App with Whisper Integration
 
@@ -175,3 +355,82 @@ The goal is to create a small interpreter app that can:
 - The application uses WASAPI loopback to capture audio, which works for any audio playing on the system, including Chrome browser audio
 - Windows-only application due to the use of WASAPI for audio capture
 - The Whisper API model used is "whisper-1"
+
+## Current Task: Create Continuous Transcription UI with Whisper
+
+### Requirements Analysis:
+
+1. Continuous audio recording and transcription
+2. Simple UI for start/stop control
+3. Real-time display of transcription results
+4. Support for longer audio inputs (up to 25MB)
+5. Proper cleanup of resources
+
+### Technical Considerations:
+
+1. Audio Recording:
+
+   - Use PyAudioWPatch for WASAPI loopback
+   - Record in chunks (e.g., 30 seconds each)
+   - Save chunks to temporary files
+   - Clean up files after transcription
+
+2. Whisper API:
+
+   - Support for longer inputs (up to 25MB)
+   - Can handle audio up to 25MB in size
+   - Supports various audio formats (mp3, mp4, mpeg, mpga, m4a, wav, webm)
+   - Response time varies with audio length
+
+3. UI Requirements:
+   - Start/Stop button
+   - Status indicator
+   - Transcription display area
+   - Error handling and user feedback
+
+### Implementation Plan:
+
+[X] Step 1: Create Basic UI Structure
+[X] Create new file `src/transcription_ui.py`
+[X] Set up PyQt6 window with basic controls
+[X] Add status display area
+
+[X] Step 2: Implement Audio Recording
+[X] Create audio recording class
+[X] Implement chunk-based recording
+[X] Add proper resource cleanup
+[X] Handle device selection
+
+[X] Step 3: Implement Whisper Integration
+[X] Create transcription service
+[X] Handle chunk processing
+[X] Implement error handling
+[X] Add progress feedback
+
+[X] Step 4: Connect UI and Backend
+[X] Implement start/stop functionality
+[X] Add real-time status updates
+[X] Display transcription results
+[X] Handle errors gracefully
+
+[ ] Step 5: Testing and Refinement
+[ ] Test with different audio sources
+[ ] Verify resource cleanup
+[ ] Test error scenarios
+[ ] Optimize performance
+
+### Current Status:
+
+- Basic implementation complete
+- Ready for testing phase
+- Created three main components:
+  1. `transcription_ui.py`: Main UI with controls and display
+  2. `audio_recorder.py`: Handles continuous audio recording in chunks
+  3. `transcription_service.py`: Manages Whisper API integration
+
+### Next Steps:
+
+1. Test the application with different audio sources
+2. Verify proper cleanup of temporary files
+3. Test error handling scenarios
+4. Optimize performance if needed
