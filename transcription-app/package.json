@@ -1,0 +1,32 @@
+{
+  "name": "transcription-app",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@aws-sdk/client-transcribe": "^3.532.0",
+    "@aws-sdk/client-transcribe-streaming": "^3.532.0",
+    "@supabase/supabase-js": "^2.49.1",
+    "next": "15.2.3",
+    "posthog-js": "^1.232.2",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-draggable": "^4.4.6"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20.17.24",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.2.3",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}

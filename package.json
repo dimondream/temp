@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-transcribe-streaming": "^3.772.0",
+    "@aws-sdk/s3-request-presigner": "^3.772.0"
+  }
+}

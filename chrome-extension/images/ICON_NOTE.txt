@@ -1,0 +1,15 @@
+NOTE: REPLACE THESE PLACEHOLDER FILES WITH ACTUAL PNG ICONS
+
+You need to replace the placeholder icon files with actual PNG images before loading the extension:
+
+- icon16.png (16x16 pixels)
+- icon32.png (32x32 pixels)
+- icon48.png (48x48 pixels)
+- icon128.png (128x128 pixels)
+
+You can either:
+1. Create your own icons
+2. Download free icons from sites like flaticon.com or iconfinder.com
+3. Generate icon sets using tools like https://www.favicon-generator.org/
+
+All four icon sizes are required for the extension to work properly. 
