@@ -8,6 +8,122 @@ You should also use the `.cursorrules` file as a Scratchpad to organize your tho
 
 Also update the progress of the task in the Scratchpad when you finish a subtask.
 Especially when you finished a milestone, it will help to improve your depth of task accomplishment to use the Scratchpad to reflect and plan.
+
+# Scratchpad
+
+## Current Task: Web-based Streaming Transcription Implementation
+
+### Current MVP Implementation Status
+
+[X] Set up Next.js project with TypeScript and TailwindCSS
+[X] Implement UI with language selector and main landing page
+[X] Create draggable floating window component
+[X] Implement microphone permission handling
+[X] Add mock transcription functionality
+[X] Implement copy/save/clear transcript features
+[X] Structure project for AWS Transcribe integration
+[X] Set up placeholder classes and interfaces for AWS services
+
+### Completed Implementation Details
+
+1. **Project Structure**
+   - Created a Next.js application with TypeScript and TailwindCSS
+   - Set up a component-based architecture with proper type definitions
+   - Implemented API routes for secure credential management
+2. **UI Implementation**
+   - Developed a clean, responsive landing page with feature highlights
+   - Created a draggable floating window component using react-draggable
+   - Implemented UI controls for language selection and transcription actions
+   - Added custom CSS for styling the application
+3. **Core Functionality**
+   - Set up audio capture using the browser's MediaStream API
+   - Implemented mock transcription service for development
+   - Created utility functions for audio processing and visualization
+   - Added event-based system for real-time transcription updates
+
+### Next Phase: AWS Transcribe Integration
+
+#### Research Needed
+
+- AWS Transcribe WebSocket API capabilities and limitations
+- Authentication and security requirements
+- Data format for streaming audio
+- Language support verification
+
+#### Implementation Plan
+
+1. Set up AWS SDK configuration
+2. Create AWS credentials management with Supabase
+3. Implement WebSocket connection to AWS Transcribe streaming service
+4. Convert browser audio to format compatible with AWS Transcribe
+5. Process transcription results in real-time
+6. Error handling and reconnection logic
+
+### Technical Requirements for AWS Integration
+
+1. **Backend Setup**
+
+   - Create API route for secure AWS credential management
+   - Set up Supabase tables for user preferences and API keys
+
+2. **Front-end Integration**
+
+   - Replace mock transcription with real AWS Transcribe connection
+   - Implement audio processing pipeline
+   - Add language detection framework (for future use)
+
+3. **Security Considerations**
+   - Secure credential storage
+   - User authentication (if needed)
+   - API usage monitoring
+
+### Development Roadmap
+
+**Phase 1: Research & Planning** (Completed)
+
+- [x] Define product requirements
+- [x] Define user personas and use cases
+- [x] Finalize technical requirements
+
+**Phase 2: MVP Development** (Completed)
+
+- [x] Set up Next.js project with Tailwind CSS
+- [x] Implement browser audio capture functionality (basic)
+- [x] Build basic UI components (floating window, controls)
+- [x] Implement mock real-time transcription display
+- [x] Add copy/save functionality
+- [x] Prepare for AWS Transcribe integration with placeholder implementations
+
+**Phase 3: AWS Integration & Testing** (Next Steps)
+
+- [ ] Set up Supabase for secure AWS credentials storage
+- [ ] Implement AWS Transcribe API integration (single language)
+- [ ] Replace mock transcription service with real AWS Transcribe connection
+- [ ] Internal testing and bug fixing
+- [ ] Performance optimization
+
+**Phase 4: MVP Launch & Feedback**
+
+- [ ] Limited beta testing with target users
+- [ ] Gather feedback and make improvements
+- [ ] Production deployment
+- [ ] Basic analytics setup with PostHog
+- [ ] Initial marketing and user acquisition
+
+**Phase 5: Enhanced Version Development**
+
+- [ ] Implement multi-language support
+- [ ] Add speaker identification/diarization
+- [ ] Enhance UI for multiple speakers and languages
+- [ ] Testing and quality assurance
+
+**Phase 6: Future Expansion**
+
+- [ ] Mobile app development with Expo
+- [ ] Additional language support
+- [ ] Translation capabilities
+- [ ] Premium features and Stripe payment integration
+
 The goal is to help you maintain a big picture as well as the progress of the task. Always refer to the Scratchpad when you plan the next step.
 
 # Tools
@@ -100,3 +216,31 @@ If needed, you can further use the `web_scraper.py` file to scrape the web page 
 # Lessons
 
 ## User Specified Lessons
+
+## Technical Lessons
+
+1. **TypeScript Generic Types**: Using generic types with event listeners improves type safety. For example, `TranscriptionEventCallback<T>` pattern ensures correct typing for different events.
+
+2. **Audio Processing**: Browser APIs require specific permissions and handling. Always use try/catch blocks when accessing MediaDevices API to handle permission denials gracefully.
+
+3. **React Component Lifecycle**: When dealing with audio streams and WebSockets, careful cleanup in useEffect return functions is crucial to prevent memory leaks.
+
+4. **AWS SDK Integration**: When working with AWS services in browser environments, use specialized browser-compatible SDKs rather than the full Node.js AWS SDK.
+
+5. **Environment Variables**: Next.js requires environment variables prefixed with `NEXT_PUBLIC_` to be accessible in browser code.
+
+6. **Event-Based Architecture**: Using an event system with named events (like 'transcription', 'error') provides a clean separation of concerns and makes the code more modular.
+
+7. **Mock Services**: Creating mock implementations that mimic real service behavior is valuable for development before integrating with actual APIs.
+
+8. **Error Handling**: Comprehensive error handling with specific error types improves debugging and user experience.
+
+9. **React 19 Compatibility**: React 19 has removed the `findDOMNode` API, which affects libraries like react-draggable. For compatibility, always use the `nodeRef` prop with a properly typed ref (e.g., `useRef<HTMLDivElement>(null) as RefObject<HTMLDivElement>`) to avoid runtime errors.
+
+10. **AWS SDK v3 in Browser**: Always use AWS SDK v3 modular packages (e.g., `@aws-sdk/client-transcribe`) instead of the legacy monolithic AWS SDK v2 (`aws-sdk`) in browser environments. The v2 SDK is designed for Node.js, while v3 packages provide proper browser support through modular imports and smaller bundle sizes.
+
+11. **Multi-Source Audio Capture**: To capture both microphone and system audio simultaneously, use the Web Audio API to combine multiple MediaStreams into a single output stream. Store references to original streams using a custom type extension to ensure proper cleanup of all resources.
+
+12. **Chrome Extension Icons**: For Chrome extensions, all icon sizes specified in the manifest.json must exist in the referenced directory. Icons commonly needed are 16px, 32px, 48px, and 128px. Missing icon files will prevent the extension from loading.
+
+13. **Chrome tabCapture API Constraints**: The tabCapture API in Chrome extensions has several important limitations: 1) It can only be called from the background script, not content scripts or popups; 2) It requires a user gesture context to work properly; 3) It doesn't work on chrome:// URLs, extension pages, or the Chrome Web Store; and 4) In Manifest V3, service worker termination can cause issues with maintaining the capture. Use message passing to coordinate between the popup and background script, and implement retry mechanisms to handle service worker lifecycle issues.

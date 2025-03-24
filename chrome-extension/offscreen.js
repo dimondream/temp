@@ -95,6 +95,9 @@ async function startRecording(data) {
     const analyser = audioContext.createAnalyser();
     source.connect(analyser);
     
+    // Connect the audio to the output to continue playing to the user
+    source.connect(audioContext.destination);
+    
     // Set up media recorder with explicit MIME type
     const options = { mimeType: 'audio/webm' };
     console.log("Creating MediaRecorder with options:", options);
@@ -129,7 +132,7 @@ async function startRecording(data) {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const fileName = `Recording_${timestamp}_${formattedDuration}.webm`;
       
-      // Create a direct download link (as a fallback)
+      // Create a direct download link
       const downloadUrl = URL.createObjectURL(audioBlob);
       console.log("Created download URL:", downloadUrl);
       
@@ -141,22 +144,27 @@ async function startRecording(data) {
         tempLink.download = fileName;
         document.body.appendChild(tempLink);
         
-        // Store the download URL in localStorage to help with debugging
+        // Store the download URL in localStorage for access
         localStorage.setItem('latest_recording_url', downloadUrl);
         localStorage.setItem('latest_recording_name', fileName);
         
         console.log("Created download link element");
-        // Note: We don't auto-download, but keep the URL available
-        // tempLink.click();
-        
-        // Instead, let the storage system handle it
         document.getElementById('status').textContent = 'Download ready: ' + fileName;
+        
+        // Notify the background script about the direct download
+        chrome.runtime.sendMessage({
+          type: 'direct-download-ready',
+          target: 'background',
+          data: {
+            name: fileName,
+            url: downloadUrl
+          }
+        }, response => {
+          console.log("Direct download notification response:", response);
+        });
       } catch (e) {
         console.error("Error creating download link:", e);
       }
-      
-      // Save the recording to storage
-      saveRecording(audioBlob, fileName);
       
       // Reset the chunks array
       audioChunks = [];
@@ -199,17 +207,6 @@ function stopRecording() {
       document.getElementById('status').textContent = 'Recording stopped. Processing...';
     } else {
       console.warn("MediaRecorder not in recording state:", mediaRecorder.state);
-      // Force finalization even if not in recording state
-      if (audioChunks.length > 0) {
-        console.log("Processing existing chunks even though recorder is not active");
-        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-        const recordingDuration = Date.now() - recordingStartTime;
-        const formattedDuration = formatDuration(recordingDuration);
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const fileName = `Recording_${timestamp}_${formattedDuration}.webm`;
-        saveRecording(audioBlob, fileName);
-        audioChunks = [];
-      }
     }
     
     // Clean up stream regardless of state
@@ -225,110 +222,6 @@ function stopRecording() {
     console.error("Error stopping recording:", error);
     document.getElementById('status').textContent = `Error stopping: ${error.message}`;
   }
-}
-
-// Function to save recording to storage
-function saveRecording(blob, fileName) {
-  // Create object URL for the blob
-  const url = URL.createObjectURL(blob);
-  console.log("Created blob URL:", url, "File size:", blob.size, "bytes");
-  
-  // For larger blobs, we might need to split the data
-  // Chrome storage has limits (~ 5MB per item)
-  if (blob.size > 4 * 1024 * 1024) { // > 4MB
-    console.warn("Large blob size detected, may exceed storage limits:", blob.size);
-  }
-  
-  // Convert the blob to base64 for storage
-  const reader = new FileReader();
-  reader.readAsDataURL(blob);
-  
-  reader.onloadend = function() {
-    const base64data = reader.result;
-    console.log("Converted to base64, length:", base64data.length);
-    
-    // Create a recording object
-    const recording = {
-      id: Date.now().toString(),
-      name: fileName,
-      tabTitle: currentTabTitle,
-      timestamp: Date.now(),
-      duration: Date.now() - recordingStartTime,
-      data: base64data
-    };
-    
-    console.log("Storing recording with ID:", recording.id);
-    
-    // Try direct storage first to see if it works
-    try {
-      chrome.storage.local.set({ ['recording_' + recording.id]: recording }, () => {
-        if (chrome.runtime.lastError) {
-          console.error('Error storing single recording:', chrome.runtime.lastError);
-        } else {
-          console.log('Directly stored recording with ID:', recording.id);
-        }
-      });
-    } catch (e) {
-      console.error("Exception trying to store single recording:", e);
-    }
-    
-    // Get existing recordings from storage
-    chrome.storage.local.get(['recordings'], (result) => {
-      try {
-        const recordings = result.recordings || [];
-        console.log("Current recordings count:", recordings.length);
-        
-        // Add new recording
-        recordings.push(recording);
-        
-        // Save the updated recordings array
-        chrome.storage.local.set({ recordings }, () => {
-          if (chrome.runtime.lastError) {
-            console.error('Storage error:', chrome.runtime.lastError);
-            document.getElementById('status').textContent = 'Error saving: ' + chrome.runtime.lastError.message;
-            
-            // Try using localStorage as fallback for debugging
-            try {
-              localStorage.setItem('debug_recording_' + recording.id, JSON.stringify({
-                id: recording.id,
-                name: recording.name,
-                tabTitle: recording.tabTitle,
-                timestamp: recording.timestamp,
-                duration: recording.duration,
-                size: base64data.length
-              }));
-              console.log("Saved metadata to localStorage as fallback");
-            } catch (e) {
-              console.error("LocalStorage fallback failed:", e);
-            }
-          } else {
-            console.log('Recording saved successfully:', fileName);
-            document.getElementById('status').textContent = 'Recording saved: ' + fileName;
-            
-            // Notify the background script
-            chrome.runtime.sendMessage({
-              type: 'recording-complete',
-              target: 'background',
-              data: {
-                id: recording.id,
-                name: recording.name
-              }
-            }, response => {
-              console.log("Message delivery response:", response);
-            });
-          }
-        });
-      } catch (error) {
-        console.error("Error in storage handling:", error);
-        document.getElementById('status').textContent = 'Error processing: ' + error.message;
-      }
-    });
-  };
-  
-  reader.onerror = function(error) {
-    console.error("FileReader error:", error);
-    document.getElementById('status').textContent = 'Error processing recording';
-  };
 }
 
 // Helper function to format duration

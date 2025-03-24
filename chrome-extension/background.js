@@ -1,6 +1,7 @@
 // Global recording state
 let isRecording = false;
 let recordingTabId = null;
+let directDownloadInfo = null;
 
 // Handle clicks on the extension icon
 chrome.action.onClicked.addListener(async (tab) => {
@@ -12,6 +13,25 @@ chrome.action.onClicked.addListener(async (tab) => {
 
   // Otherwise start recording
   await startRecording(tab);
+});
+
+// Listen for messages
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  // Handle messages from popup or offscreen document
+  if (message.type === 'direct-download-ready' && message.target === 'background') {
+    console.log("Received direct download info:", message.data);
+    directDownloadInfo = message.data;
+    sendResponse({ success: true });
+    return true;
+  }
+  
+  if (message.type === 'get-direct-download' && message.target === 'background') {
+    console.log("Sending direct download info:", directDownloadInfo);
+    sendResponse({ info: directDownloadInfo });
+    return true;
+  }
+  
+  return false;
 });
 
 // Function to start recording
@@ -202,25 +222,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     return false;
   }
   
-  if (message.type === 'recording-complete') {
-    // Handle recording complete
-    console.log('Recording complete:', message.data);
-    
-    // Notify popup if it's open
-    try {
-      chrome.runtime.sendMessage({
-        type: 'recording-complete',
-        target: 'popup',
-        data: message.data
-      }).catch(err => console.log("Error sending to popup (probably not open):", err));
-    } catch (e) {
-      console.log("Error notifying popup (probably not open):", e);
-    }
-    
-    // We still respond to the original sender
-    sendResponse({ received: true });
-    return false;
-  } else if (message.type === 'get-recording-state') {
+  if (message.type === 'get-recording-state') {
     // Return current recording state
     sendResponse({ isRecording: isRecording });
     return false; // No need for async response
